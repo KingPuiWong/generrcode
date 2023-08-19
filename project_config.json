@@ -1,0 +1,8 @@
+{
+  "myproject": {
+    "startCode": 10000
+  },
+  "otherproject": {
+    "startCode": 20000
+  }
+}
