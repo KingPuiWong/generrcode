@@ -18,8 +18,6 @@ const (
 	configFile = "project_config.json" // 项目配置文件
 )
 
-
-
 var (
 	projectMutexes = make(map[string]*sync.Mutex)
 )
@@ -81,6 +79,9 @@ func generateBusinessCodes(projectName string) error {
 					trimmedName := strings.TrimPrefix(name.Name, "TypeMsg")
 					constName := fmt.Sprintf("TypeCode%s", trimmedName)
 
+					// 更新常量名
+					valueSpec.Names[i] = ast.NewIdent(constName)
+
 					// 生成常量
 					lastCode++
 					valueSpec.Values[i] = &ast.BasicLit{
@@ -119,6 +120,14 @@ func generateBusinessCodes(projectName string) error {
 											},
 										},
 									},
+								},
+							},
+						},
+						// 添加 Doc 注释
+						Doc: &ast.CommentGroup{
+							List: []*ast.Comment{
+								{
+									Text: fmt.Sprintf("// 提示内容：%s\n// 状态码：%d\n", name.Name, projectConfig.StartCode+lastCode-1),
 								},
 							},
 						},
