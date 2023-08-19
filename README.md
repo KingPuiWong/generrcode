@@ -1,1 +1,1 @@
-# generrmsg
+Automatically generate the corresponding code and call methods according to the defined msg
