@@ -18,10 +18,7 @@ const (
 	configFile = "project_config.json" // 项目配置文件
 )
 
-type Resp struct {
-	Code int
-	Msg  string
-}
+
 
 var (
 	projectMutexes = make(map[string]*sync.Mutex)
