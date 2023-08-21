@@ -78,7 +78,7 @@ func generateBusinessCodes(projectName string) error {
 				if strings.HasPrefix(name.Name, "TypeMsg") {
 					trimmedName := strings.TrimPrefix(name.Name, "TypeMsg")
 					constName := fmt.Sprintf("TypeCode%s", trimmedName)
-
+					constOriValue := valueSpec.Values[i].(*ast.BasicLit).Value
 					// 更新常量名
 					valueSpec.Names[i] = ast.NewIdent(constName)
 
@@ -127,20 +127,13 @@ func generateBusinessCodes(projectName string) error {
 						Doc: &ast.CommentGroup{
 							List: []*ast.Comment{
 								{
-									Text: fmt.Sprintf("// 提示内容：%s\n// 状态码：%d\n", name.Name, projectConfig.StartCode+lastCode-1),
+									Text: fmt.Sprintf("// 提示内容：%s\n// 状态码：%d\n", constOriValue, projectConfig.StartCode+lastCode-1),
 								},
 							},
 						},
 					}
 					file.Decls = append(file.Decls, getFunc)
-
-					// 生成 Get 函数的注释
-					comment := &ast.Comment{
-						Text:  fmt.Sprintf("// 提示内容：%s\n// 状态码：%d\n", name.Name, projectConfig.StartCode+lastCode-1),
-						Slash: token.NoPos,
-					}
-					addGeneratedFunctionComment(fset, file, getFuncName, comment)
-
+					file.Comments = append(file.Comments, getFunc.Doc)
 				}
 			}
 		}
@@ -256,25 +249,6 @@ func addGeneratedComment(file *ast.File) {
 		file.Comments = append(file.Comments, &ast.CommentGroup{
 			List: []*ast.Comment{newComment},
 		})
-	}
-}
-
-// 添加新的生成函数注释
-func addGeneratedFunctionComment(fset *token.FileSet, file *ast.File, name string, comment *ast.Comment) {
-	newComment := &ast.Comment{
-		Text:  comment.Text,
-		Slash: token.NoPos,
-	}
-
-	// 修改此处逻辑，将注释添加到函数之前
-	for _, decl := range file.Decls {
-		if funcDecl, ok := decl.(*ast.FuncDecl); ok && funcDecl.Name.Name == name {
-			// 创建一个新的注释组并将注释添加进去
-			funcDecl.Doc = &ast.CommentGroup{
-				List: []*ast.Comment{newComment},
-			}
-			break
-		}
 	}
 }
 
