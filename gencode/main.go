@@ -58,12 +58,6 @@ func generateBusinessCodes(projectName string) error {
 		return err
 	}
 
-	// 加载已分配的错误码
-	lastCode, err := loadLastErrorCode(projectName)
-	if err != nil {
-		return err
-	}
-
 	for _, decl := range file.Decls {
 		genDecl, ok := decl.(*ast.GenDecl)
 		if !ok || genDecl.Tok != token.CONST {
@@ -85,10 +79,9 @@ func generateBusinessCodes(projectName string) error {
 					valueSpec.Names[i] = ast.NewIdent(constName)
 
 					// 生成常量
-					lastCode++
 					valueSpec.Values[i] = &ast.BasicLit{
 						Kind:  token.INT,
-						Value: fmt.Sprintf("%d", projectConfig.StartCode+lastCode-1),
+						Value: fmt.Sprintf("%d", projectConfig.StartCode),
 					}
 
 					// 生成 Get 函数
@@ -129,24 +122,25 @@ func generateBusinessCodes(projectName string) error {
 						Doc: &ast.CommentGroup{
 							List: []*ast.Comment{
 								{
-									Text: fmt.Sprintf("// 提示内容：%s\n// 状态码：%d\n", constOriValue, projectConfig.StartCode+lastCode-1),
+									Text: fmt.Sprintf("// 提示内容：%s\n// 状态码：%d\n", constOriValue, projectConfig.StartCode),
 								},
 							},
 						},
 					}
 					file.Decls = append(file.Decls, getFunc)
 					file.Comments = append(file.Comments, getFunc.Doc)
+					projectConfig.StartCode++
 				}
 			}
 		}
 	}
 
-	// 保存已分配的错误码
-	err = saveLastErrorCode(projectName, lastCode)
-	if err != nil {
-		return err
-	}
-
+	//// 保存已分配的错误码
+	//err = saveLastErrorCode(projectName, lastCode)
+	//if err != nil {
+	//	return err
+	//}
+	//
 	// 格式化生成的代码
 	var generatedCode strings.Builder
 	err = format.Node(&generatedCode, fset, file)
