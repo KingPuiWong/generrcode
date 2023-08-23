@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/dave/dst"
+	"github.com/dave/dst/decorator"
 	"go/ast"
 	"go/format"
 	"go/parser"
@@ -152,12 +154,40 @@ func generateBusinessCodes(projectName string) error {
 		return err
 	}
 
+	f, err := decorator.Parse(generatedCode.String())
+	if err != nil {
+		panic(err)
+	}
+
+	start := 1
+	for _, decl := range f.Decls {
+		genDecl, ok := decl.(*dst.FuncDecl)
+		if !ok {
+			continue
+		}
+
+		genDecl.Decorations().Start = f.Decorations().Start[start : start+2]
+		start += 2
+	}
+
+	f.Decorations().Start = f.Decorations().Start[:1]
+
+	if err := decorator.Print(f); err != nil {
+		panic(err)
+	}
+
 	// 将生成的代码写入文件（与 errmsg 包同级目录）
 	// 使用绝对路径来指定代码文件的位置
 	outputFilePath := filepath.Join("", "generated_codes.go")
-	err = os.WriteFile(outputFilePath, []byte(generatedCode.String()), 0644)
+	//err = os.WriteFile(outputFilePath, []byte(generatedCode.String()), 0644)
+	//if err != nil {
+	//	return err
+	//}
+	printFile, _ := os.Create(outputFilePath)
+
+	err = decorator.Fprint(printFile, f)
 	if err != nil {
-		return err
+		panic(err)
 	}
 
 	return nil
